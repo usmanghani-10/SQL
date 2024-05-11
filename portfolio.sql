@@ -866,28 +866,31 @@ CREATE TABLE plans (plan_id INTEGER, plan_name VARCHAR(13), price DECIMAL(5,2) )
   ('999', '4', '2020-12-01'), ('1000', '0', '2020-03-19'), ('1000', '2', '2020-03-26'),
   ('1000', '4', '2020-06-04');
   
-  
+--Questions 1. How many customers hasFoodie-Fi ever had?  
   select count(customer_id) from subscriptions;
   
-  
+  --2. What is the monthly distribution of trial plan start_date values for ourdataset -
+            use the start of the month as the group by value
   SELECT DATE_FORMAT(start_date, '%Y-%m-01') AS month_start, COUNT(plan_id) AS Count_of_Plans 
 FROM subscriptions
 GROUP BY DATE_FORMAT(start_date, '%Y-%m-01')
 ORDER BY DATE_FORMAT(start_date, '%Y-%m-01');
 
-
+--3. What plan start_date values occurafter the year 2020 for our dataset?
+    Show the breakdown by count of events for eachplan_name
 select start_date,count(plan_id) from subscriptions
 where Year(start_date) > '2020'
 group by start_date;
 
-
+--4. What is the customer count and percentage of customers who have churnedrounded to 1 decimal place?
 select plan_name,count(customer_id),(select count(customer_id) from subscriptions join plans
 on subscriptions.plan_id = plans.plan_id
 where plan_name = 'churn')/( select count(customer_id) from subscriptions)*100 AS Percent from subscriptions join plans
 on subscriptions.plan_id = plans.plan_id
 where plan_name = 'churn';
 
-
+--5. How many customers have churned straight after their initial freetrial -
+ what percentage is this rounded to the nearest whole number?
 SELECT 
     plan_name,
     (SELECT COUNT(DISTINCT customer_id) 
@@ -912,6 +915,8 @@ JOIN plans ON subscriptions.plan_id = plans.plan_id
 WHERE plan_name = 'trial' 
 GROUP BY plan_name;
 
+
+--7. What is the customer count andpercentage breakdown of all 5 plan_name values at 2020-12-31?
 select plan_name,count(customer_id),((select count(customer_id) from subscriptions
 where start_date = '2020-12-31')/(select count(customer_id) from subscriptions))*100 as Percentage
 from subscriptions join plans on subscriptions.plan_id = plans.plan_id 
@@ -920,6 +925,7 @@ group by plan_name;
 
 
 
+--6. What is the number and percentage of customer plans after their initial free trial?
 SELECT 
     plan_name,
     (SELECT COUNT(DISTINCT customer_id) 
@@ -949,12 +955,14 @@ FROM (SELECT DISTINCT plan_name FROM plans) AS main
 GROUP BY plan_name;
 
 
+--8. How many customers haveupgraded to an annual plan in 2020?
 select plan_name,count(customer_id) from subscriptions join plans
 on subscriptions.plan_id = plans.plan_id
 where plan_name = 'pro annual' and 
 year(start_date) = '2020';
 
 
+--9.How many days on average does it take for a customerto an annual plan from the day they join Foodie-Fi?
 Select count(customer_id) as No_of_customers,AVG(DATEDIFF((Select Min(start_date)
  from subscriptions as s1 where s1.customer_id=s2.customer_id and plan_id=3),
  (Select MIN(start_date) from subscriptions as s3 where s3.customer_id=s2.customer_id ))) 
@@ -964,7 +972,7 @@ Select count(customer_id) as No_of_customers,AVG(DATEDIFF((Select Min(start_date
 
 
 
-
+--10.Can you further breakdown this averagevalue into 30 day periods (i.e. 0-30 days, 31-60 days etc)
 WITH annual_plan AS (
     SELECT customer_id, start_date AS annual_date 
     FROM subscriptions 
@@ -992,7 +1000,7 @@ GROUP BY bins;
 
 
 
-
+--11.How many customers downgradedfrom a pro monthly to a basic monthly plan in 2020?
 WITH next_plan_cte AS (
     SELECT 
         customer_id,
